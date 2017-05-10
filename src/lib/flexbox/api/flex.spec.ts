@@ -303,6 +303,7 @@ describe('flex directive', () => {
         `)
             .not.toHaveCssStyle({
           'flex-direction': 'row',
+          'flex': '1 1 100%',
           'max-height': '37%',
         });
       });
@@ -316,18 +317,21 @@ describe('flex directive', () => {
 
         expectDomForQuery(template, "[fxFlex]")
             .toHaveCssStyle({
+              'flex': '1 1 100%',
               'max-height': '37%',
             });
       });
 
       it('should set max-width for `fxFlex="<%val>"`', () => {
         expectDOMFrom(`<div fxFlex="37%"></div>`).toHaveCssStyle({
+          'flex': '1 1 100%',
           'max-width': '37%',
         });
       });
 
       it('should set max-width for `fxFlex="2%"` usage', () => {
         expectDOMFrom(`<div fxFlex="2%"></div>`).toHaveCssStyle({
+          'flex': '1 1 100%',
           'max-width': '2%',
         });
       });
@@ -349,7 +353,7 @@ describe('flex directive', () => {
       fixture.detectChanges();
 
       expectNativeEl(fixture).toHaveCssStyle({
-        'flex': '1 1 50%',
+        'flex': '1 1 100%',
         'max-width': '50%'
       });
 
@@ -357,7 +361,7 @@ describe('flex directive', () => {
       fixture.detectChanges();
 
       expectNativeEl(fixture).toHaveCssStyle({
-        'flex': '1 1 33%',
+        'flex': '1 1 100%',
         'max-width': '33%'
       });
     });
