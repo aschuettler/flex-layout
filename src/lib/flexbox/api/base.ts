@@ -18,10 +18,36 @@ import {MediaQuerySubscriber} from '../../media-query/media-change';
  * Definition of a css style. Either a property name (e.g. "flex-basis") or an object
  * map of property name and value (e.g. {display: 'none', flex-order: 5}).
  */
-export type StyleDefinition = string|{[property: string]: string|number};
+export type StyleDefinition = string | { [property: string]: string | number };
 
 /** Abstract base class for the Layout API styling directives. */
 export abstract class BaseFxDirective implements OnDestroy {
+
+  /**
+   * Imperatively determine the current activated [input] value;
+   * if called before ngOnInit() this will return `undefined`
+   */
+  get activatedValue(): string | number {
+    return this._mqActivation ? this._mqActivation.activatedInput : undefined;
+  }
+
+  /**
+   * Change the currently activated input value and force-update
+   * the injected CSS (by-passing change detection).
+   *
+   * NOTE: Only the currently activated input value will be modified;
+   *       other input values will NOT be affected.
+   */
+  set activatedValue(value: string | number) {
+    if (!this._mqActivation) {
+      this._updateStyle(value);
+      return;
+    }
+
+    let activatedKey = this._mqActivation.activatedInputKey;
+    this._inputMap[activatedKey] = value;
+    this._updateStyle(value);
+  }
 
   get hasMediaQueryListener() {
     return !!this._mqActivation;
@@ -65,10 +91,17 @@ export abstract class BaseFxDirective implements OnDestroy {
   // *********************************************
 
   /**
+   * Abstract method...
+   */
+  protected _updateStyle(value?: string | number) {
+
+  }
+
+  /**
    * Was the directive's default selector used ?
    * If not, use the fallback value!
    */
-  protected _getDefaultVal(key: string, fallbackVal: any): string|boolean {
+  protected _getDefaultVal(key: string, fallbackVal: any): string | boolean {
     let val = this._queryInput(key);
     let hasDefaultVal = (val !== undefined && val !== null);
     return (hasDefaultVal && val !== '') ? val : fallbackVal;
@@ -86,22 +119,22 @@ export abstract class BaseFxDirective implements OnDestroy {
   }
 
   protected _getFlowDirection(target: any, addIfMissing = false): string {
-      let value = "";
-      if ( target ) {
-        let directionKeys = Object.keys(applyCssPrefixes({'flex-direction': ''}));
-        let findDirection = (styles) => directionKeys.reduce((direction, key) => {
-          return direction || styles[key];
-        }, null);
+    let value = "";
+    if (target) {
+      let directionKeys = Object.keys(applyCssPrefixes({'flex-direction': ''}));
+      let findDirection = (styles) => directionKeys.reduce((direction, key) => {
+        return direction || styles[key];
+      }, null);
 
-        let immediateValue = findDirection(target['style']);
-        value = immediateValue || findDirection(getComputedStyle(target as Element));
-        if ( !immediateValue && addIfMissing ) {
-          value = value || 'row';
-          this._applyStyleToElements(buildLayoutCSS(value), [target]);
-        }
+      let immediateValue = findDirection(target['style']);
+      value = immediateValue || findDirection(getComputedStyle(target as Element));
+      if (!immediateValue && addIfMissing) {
+        value = value || 'row';
+        this._applyStyleToElements(buildLayoutCSS(value), [target]);
       }
+    }
 
-      return value ? value.trim() : "row";
+    return value ? value.trim() : "row";
   }
 
   /**
@@ -121,7 +154,7 @@ export abstract class BaseFxDirective implements OnDestroy {
    * Applies styles given via string pair or object map to the directive element.
    */
   protected _applyStyleToElement(style: StyleDefinition,
-                                 value?: string|number,
+                                 value?: string | number,
                                  nativeElement?: any) {
     let styles = {};
     let element = nativeElement || this._elementRef.nativeElement;
@@ -169,7 +202,7 @@ export abstract class BaseFxDirective implements OnDestroy {
   protected _listenForMediaQueryChanges(key: string,
                                         defaultValue: any,
                                         onMediaQueryChange: MediaQuerySubscriber): ResponsiveActivation { // tslint:disable-line:max-line-length
-    if ( !this._mqActivation ) {
+    if (!this._mqActivation) {
       let keyOptions = new KeyOptions(key, defaultValue, this._inputMap);
       this._mqActivation = new ResponsiveActivation(
           keyOptions,
